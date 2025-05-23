@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { awsService } from '../services/awsService';
-import { getCpuUsage } from './metricsController';
+import { awsService } from '../../services/awsService';
+import { getCpuUsage } from '../metricsController';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // Mock the AWS service
-jest.mock('../services/awsService', () => ({
+jest.mock('../../services/awsService', () => ({
   awsService: {
     getInstanceIdForIPAddress: jest.fn(),
     getMetricDataFromCloudWatch: jest.fn()
