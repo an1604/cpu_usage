@@ -50,3 +50,24 @@ docker run -p 3000:3000 \
 ```sh
 docker run -p 3000:3000 --env-file .env faddom-backend
 ```
+
+## Running Locally
+
+To run the backend service locally, follow these steps:
+
+1. **Install Dependencies**: Ensure you have all necessary packages by running:
+   ```sh
+   npm install
+   ```
+
+2. **Run the Server**: Start the server using `ts-node`:
+   ```sh
+   npx ts-node src/index.ts
+   ```
+
+Make sure all required environment variables are set in your environment or in a `.env` file before starting the server. This will allow the backend service to function correctly and connect to AWS services as needed.
+
+3. **Run All Tests**: Execute all tests with detailed output using:
+   ```sh
+   npx jest --verbose
+   ```
