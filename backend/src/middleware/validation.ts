@@ -1,13 +1,23 @@
 import { z } from "zod";
 
+const ALLOWED_TIME_RANGES = [
+    'Last Hour',
+    'Last 6 Hours',
+    'Last 12 Hours',
+    'Last Day',
+    'Last 7 Days'
+] as const;
+
 /**
  * The schema for the query parameters
  */
 export const metricsQuerySchema = z.object({
     ipAddress: z.string().ip(),
-    periodDays: z.number().int().min(1).max(14),
+    timeRange: z.enum(ALLOWED_TIME_RANGES, {
+        errorMap: () => ({ message: 'Invalid timeRange. Must be one of: ' + ALLOWED_TIME_RANGES.join(', ') })
+    }),
     period: z.number().int().min(60).max(86400)
-  });
+});
 
 /**
  * Validate the query parameters

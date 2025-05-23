@@ -7,29 +7,29 @@ const router = Router();
 // Request body:
 // {
 //   ipAddress: string,    // IP address of the AWS instance
-//   periodDays: number,   // Time period in days to fetch data for
+//   timeRange: string,    // Time range, e.g., "Last Day", "Last Hour"
 //   period: number        // Interval between samples in seconds
 // }
 const cpuUsageHandler: RequestHandler = async (req, res, next) => {
   console.log('[MetricsRoute] Received CPU usage request:', {
     ipAddress: req.body.ipAddress,
-    periodDays: req.body.periodDays,
+    timeRange: req.body.timeRange,
     period: req.body.period
   });
 
   try {
-    const { ipAddress, periodDays, period } = req.body;
+    const { ipAddress, timeRange, period } = req.body;
     
-    if (!ipAddress || !periodDays || !period) {
+    if (!ipAddress || !timeRange || !period) {
       console.log('[MetricsRoute] Missing required parameters');
       res.status(400).json({
-        error: 'Missing required parameters. Please provide ipAddress, periodDays, and period'
+        error: 'Missing required parameters. Please provide ipAddress, timeRange, and period'
       });
       return;
     }
 
     console.log('[MetricsRoute] Calling getCpuUsage controller');
-    const result = await getCpuUsage(ipAddress, periodDays, period);
+    const result = await getCpuUsage(ipAddress, timeRange, period);
     console.log('[MetricsRoute] Successfully retrieved CPU usage data');
     res.json(result);
   } catch (error) {

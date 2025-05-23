@@ -1,6 +1,6 @@
 export interface MetricsQueryParams {
   ipAddress: string;
-  periodDays: number;
+  timeRange: string;
   period: number;
 }
 

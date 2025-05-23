@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 interface MetricsQueryParams {
   ipAddress: string;
-  periodDays: number;
+  timeRange: string;
   period: number;
 }
 
@@ -11,18 +11,28 @@ interface MetricsFormProps {
   isLoading: boolean;
 }
 
+const TIME_RANGE_OPTIONS = [
+  'Last Hour',
+  'Last 6 Hours',
+  'Last 12 Hours',
+  'Last Day',
+  'Last 7 Days',
+];
+
+const PERIOD_OPTIONS = [1, 5, 10, 20, 30];
+
 const MetricsForm: React.FC<MetricsFormProps> = ({ onSubmit, isLoading }) => {
   const [formData, setFormData] = useState<MetricsQueryParams>({
     ipAddress: '',
-    periodDays: 1,
+    timeRange: 'Last Day',
     period: 3600
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'ipAddress' ? value : Number(value)
+      [name]: name === 'period' ? Number(value) : value
     }));
   };
 
@@ -48,32 +58,33 @@ const MetricsForm: React.FC<MetricsFormProps> = ({ onSubmit, isLoading }) => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="periodDays">Time Period (days):</label>
-        <input
-          type="number"
-          id="periodDays"
-          name="periodDays"
-          value={formData.periodDays}
+        <label htmlFor="timeRange">Time Period:</label>
+        <select
+          id="timeRange"
+          name="timeRange"
+          value={formData.timeRange}
           onChange={handleChange}
-          min="1"
-          max="14"
           required
-        />
+        >
+          {TIME_RANGE_OPTIONS.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
       </div>
 
       <div className="form-group">
         <label htmlFor="period">Interval (seconds):</label>
-        <input
-          type="number"
+        <select
           id="period"
           name="period"
           value={formData.period}
           onChange={handleChange}
-          min="60"
-          max="86400"
-          step="60"
           required
-        />
+        >
+          {PERIOD_OPTIONS.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
       </div>
 
       <button type="submit" disabled={isLoading}>

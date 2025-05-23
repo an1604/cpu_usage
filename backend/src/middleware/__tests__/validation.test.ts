@@ -7,7 +7,7 @@ describe('Validation Middleware', () => {
         it('should accept valid query parameters', () => {
             const validQuery = {
                 ipAddress: '192.168.1.1',
-                periodDays: 7,
+                timeRange: 'Last Day',
                 period: 300
             };
 
@@ -18,7 +18,7 @@ describe('Validation Middleware', () => {
         it('should reject invalid IP address', () => {
             const invalidIpQuery = {
                 ipAddress: 'invalid-ip',
-                periodDays: 7,
+                timeRange: 'Last Day',
                 period: 300
             };
 
@@ -28,36 +28,39 @@ describe('Validation Middleware', () => {
             expect(result.error).toContain('Invalid ip');
         });
 
-        it('should reject periodDays less than 1', () => {
-            const invalidPeriodDaysQuery = {
+        it('should reject invalid timeRange value', () => {
+            const invalidTimeRangeQuery = {
                 ipAddress: '192.168.1.1',
-                periodDays: 0,
+                timeRange: 'Invalid Range',
                 period: 300
             };
 
-            const result = validateRequestQuery({ query: invalidPeriodDaysQuery });
+            const result = validateRequestQuery({ query: invalidTimeRangeQuery });
             expect(result.success).toBe(false);
             expect(result.status).toBe(400);
-            expect(result.error).toContain('Number must be greater than or equal to 1');
+            expect(result.error).toContain('Invalid timeRange');
         });
 
-        it('should reject periodDays more than 14', () => {
-            const invalidPeriodDaysQuery = {
-                ipAddress: '192.168.1.1',
-                periodDays: 15,
-                period: 300
-            };
+        it('should accept valid timeRange values', () => {
+            const validTimeRanges = ['Last Hour', 'Last 6 Hours', 'Last 12 Hours', 'Last Day', 'Last 7 Days'];
+            
+            for (const timeRange of validTimeRanges) {
+                const validQuery = {
+                    ipAddress: '192.168.1.1',
+                    timeRange,
+                    period: 300
+                };
 
-            const result = validateRequestQuery({ query: invalidPeriodDaysQuery });
-            expect(result.success).toBe(false);
-            expect(result.status).toBe(400);
-            expect(result.error).toContain('Number must be less than or equal to 14');
+                const result = validateRequestQuery({ query: validQuery });
+                expect(result.success).toBe(true);
+                expect(result.status).toBe(200);
+            }
         });
 
         it('should reject period less than 60', () => {
             const invalidPeriodQuery = {
                 ipAddress: '192.168.1.1',
-                periodDays: 7,
+                timeRange: 'Last Day',
                 period: 30
             };
 
@@ -70,7 +73,7 @@ describe('Validation Middleware', () => {
         it('should reject period more than 86400', () => {
             const invalidPeriodQuery = {
                 ipAddress: '192.168.1.1',
-                periodDays: 7,
+                timeRange: 'Last Day',
                 period: 90000
             };
 

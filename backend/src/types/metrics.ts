@@ -3,7 +3,7 @@
  */
 export interface MetricsQueryParams {
   ipAddress: string;      // IP address of the AWS instance
-  periodDays: number;     // Time period in days to fetch data for
+  timeRange: string;     // Time period in days to fetch data for
   period: number;         // Interval between samples in seconds
 }
 

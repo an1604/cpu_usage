@@ -10,14 +10,18 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:300
 function validateMetricsParams(params: MetricsQueryParams): void {
   const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
   if (!ipRegex.test(params.ipAddress)) {
+    console.error('[API] Invalid IP address format:', params.ipAddress);
     throw new Error('Invalid IP address format');
   }
-  if (params.periodDays < 1 || params.periodDays > 14) {
-    throw new Error('Period days must be between 1 and 14');
+  if (!params.timeRange || typeof params.timeRange !== 'string') {
+    console.error('[API] Invalid or missing timeRange:', params.timeRange);
+        throw new Error('Invalid or missing timeRange');
   }
-  if (params.period < 60 || params.period > 86400) {
-    throw new Error('Period must be between 60 and 86400 seconds');
+  if (params.period <= 0 || params.period > 86400) {
+    console.error('[API] Invalid period:', params.period);
+    throw new Error('Period must be between 0 and 86400 seconds');
   }
+  console.log('[API] Validated params:', params);
 }
 
 /**
@@ -38,7 +42,7 @@ export async function fetchMetricsData(params: MetricsQueryParams): Promise<Metr
       },
       body: JSON.stringify({
         ipAddress: params.ipAddress,
-        periodDays: Number(params.periodDays),
+        timeRange: params.timeRange,
         period: Number(params.period)
       })
     });
@@ -62,7 +66,7 @@ export async function fetchMetricsData(params: MetricsQueryParams): Promise<Metr
     return {
       Datapoints: data.Timestamps.map((timestamp: string, index: number) => ({
         Timestamp: timestamp,
-        Average: data.Values[index] || 0
+        Average: data.Values[index]
       }))
     };
   } catch (error) {

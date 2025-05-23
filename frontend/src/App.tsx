@@ -4,6 +4,7 @@ import ErrorMessage from './components/ErrorMessage';
 import { CpuChart } from './components/CpuChart';
 import { fetchMetricsData } from './services/api';
 import { MetricDataResult } from './types/metrics';
+import type { MetricsQueryParams } from './types/metrics';
 import './App.css';
 
 function App() {
@@ -11,12 +12,13 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [metricsData, setMetricsData] = useState<MetricDataResult | null>(null);
 
-  const handleMetricsSubmit = async (params: { ipAddress: string; periodDays: number; period: number }) => {
+  const handleMetricsSubmit = async (params: MetricsQueryParams) => {
     setIsLoading(true);
     setError(null);
     
     try {
       const data = await fetchMetricsData(params);
+      console.log(`[App] data: ${data}`);
       setMetricsData(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch metrics data. Please try again.';
