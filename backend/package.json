@@ -6,11 +6,11 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "jest --verbose --no-cache",
-    "test:watch": "jest --watch --verbose --no-cache",
-    "start": "ts-node index.ts",
+    "test": "npx jest --verbose --no-cache",
+    "test:watch": "npx jest --watch --verbose --no-cache",
+    "start": "npx ts-node index.ts",
     "build": "tsc",
-    "dev": "ts-node-dev --respawn src/services/awsService.ts"
+    "dev": "npx ts-node-dev --respawn src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -28,7 +28,9 @@
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.501.0",
     "@aws-sdk/client-ec2": "^3.501.0",
+    "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "zod": "^3.25.23"

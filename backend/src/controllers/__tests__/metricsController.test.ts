@@ -24,10 +24,10 @@ describe('Metrics Controller', () => {
     };
 
     mockReq = {
-      query: {
+      body: {
         ipAddress: '172.31.88.161',
-        periodDays: '1',
-        period: '3600'
+        periodDays: 1,
+        period: 3600
       }
     };
   });
@@ -51,6 +51,21 @@ describe('Metrics Controller', () => {
     expect(mockRes.json).toHaveBeenCalledWith({
       Timestamps: mockMetricData.Timestamps,
       Values: mockMetricData.Values
+    });
+  });
+
+  it('should handle invalid parameter types', async () => {
+    mockReq.body = {
+      ipAddress: '172.31.88.161',
+      periodDays: '1' as any, // Invalid type
+      period: 3600
+    };
+
+    await getCpuUsage(mockReq as Request, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      error: 'Invalid parameter types. periodDays and period must be numbers'
     });
   });
 
