@@ -101,7 +101,7 @@ export class AwsService {
                 throw new Error('No metric data returned');
             }
 
-            // Transform AWS SDK response to our MetricDataResult type
+            // convert AWS response to MetricDataResult type
             return {
                 Timestamps: data.MetricDataResults[0].Timestamps || [],
                 Values: data.MetricDataResults[0].Values || []
