@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import MetricsForm from './components/MetricsForm';
 import ErrorMessage from './components/ErrorMessage';
+import { CpuChart } from './components/CpuChart';
 import { fetchMetricsData } from './services/api';
 import { MetricDataResult } from './types/metrics';
 import './App.css';
@@ -43,8 +44,8 @@ function App() {
         
         {metricsData && (
           <section className="results-section">
-            <h2>Results</h2>
-            <pre>{JSON.stringify(metricsData, null, 2)}</pre>
+            <h2>CPU Usage Over Time</h2>
+            <CpuChart data={metricsData} isLoading={isLoading} />
           </section>
         )}
       </main>

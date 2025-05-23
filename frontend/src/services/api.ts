@@ -1,4 +1,4 @@
-import { MetricsQueryParams, MetricDataResult, ErrorResponse } from '../types/metrics';
+import { MetricDataResult, MetricsQueryParams, ErrorResponse } from '../types/metrics';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 
@@ -28,6 +28,7 @@ function validateMetricsParams(params: MetricsQueryParams): void {
  */
 export async function fetchMetricsData(params: MetricsQueryParams): Promise<MetricDataResult> {
   validateMetricsParams(params);
+  console.log('[API] Sending request with params:', JSON.stringify(params, null, 2));
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/metrics/cpu-usage`, {
@@ -35,23 +36,40 @@ export async function fetchMetricsData(params: MetricsQueryParams): Promise<Metr
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(params),
+      body: JSON.stringify({
+        ipAddress: params.ipAddress,
+        periodDays: Number(params.periodDays),
+        period: Number(params.period)
+      })
     });
 
+    console.log('[API] Response status:', response.status);
+    
     if (!response.ok) {
-      const errorData: ErrorResponse = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch metrics data');
+      const errorText = await response.text();
+      console.error('[API] Error response:', errorText);
+      throw new Error(errorText || 'Failed to fetch metrics data');
     }
 
-    const data: MetricDataResult = await response.json();
+    const data = await response.json();
+    console.log('[API] Received data:', JSON.stringify(data, null, 2));
+
+    if (!data.Timestamps || !Array.isArray(data.Timestamps)) {
+      throw new Error('Invalid response format: missing Timestamps array');
+    }
+
+    // Transform the data to match our expected format
     return {
-      ...data,
-      Timestamps: data.Timestamps.map(timestamp => new Date(timestamp))
+      Datapoints: data.Timestamps.map((timestamp: string, index: number) => ({
+        Timestamp: timestamp,
+        Average: data.Values[index] || 0
+      }))
     };
   } catch (error) {
+    console.error('[API] Request failed:', error);
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error('An unexpected error occurred while fetching metrics data');
+    throw new Error('An unexpected error occurred');
   }
 }
