@@ -1,5 +1,5 @@
-import { validateRequestQuery, metricsQuerySchema } from '../validation';
-import { jest, describe, beforeEach, test, expect, it } from '@jest/globals';
+import { validateRequestQuery } from '../validation';
+import { describe, expect, it } from '@jest/globals';
 
 
 describe('Validation Middleware', () => {
