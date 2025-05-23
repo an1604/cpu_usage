@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import MetricsForm from './components/MetricsForm';
+import ErrorMessage from './components/ErrorMessage';
 import './App.css';
 
 interface MetricDataResult {
@@ -44,12 +45,6 @@ function App() {
           <h2>Query Parameters</h2>
           <MetricsForm onSubmit={handleMetricsSubmit} isLoading={isLoading} />
         </section>
-        
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
         
         {metricsData && (
           <section className="results-section">
