@@ -69,10 +69,8 @@ describe('AwsService', () => {
             );
             
             expect(metrics).toBeDefined();
-            expect(metrics.Label).toBe('CPUUtilization');
             expect(Array.isArray(metrics.Timestamps)).toBe(true);
             expect(Array.isArray(metrics.Values)).toBe(true);
-            expect(metrics.StatusCode).toBe('Complete');
         });
         
         test('should return empty data for invalid instance ID', async () => {
@@ -89,7 +87,6 @@ describe('AwsService', () => {
             expect(metrics).toBeDefined();
             expect(metrics.Timestamps).toHaveLength(0);
             expect(metrics.Values).toHaveLength(0);
-            expect(metrics.StatusCode).toBe('Complete');
         });
     });
 }); 

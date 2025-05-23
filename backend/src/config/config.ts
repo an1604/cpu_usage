@@ -14,6 +14,12 @@ const envSchema = z.object({
   CI: z.string().default('false'),
 });
 
+export const metricsQuerySchema = z.object({
+  ipAddress: z.string().ip(),
+  periodDays: z.number().int().min(1).max(14),
+  period: z.number().int().min(60).max(86400)
+});
+
 type EnvSchema = z.infer<typeof envSchema>;
 
 export class Config {

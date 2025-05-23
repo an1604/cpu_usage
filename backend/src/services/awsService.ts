@@ -1,6 +1,7 @@
-import { CloudWatchClient, GetMetricDataCommand, MetricDataResult } from '@aws-sdk/client-cloudwatch';
+import { CloudWatchClient, GetMetricDataCommand } from '@aws-sdk/client-cloudwatch';
 import { EC2Client, DescribeInstancesCommand } from '@aws-sdk/client-ec2';
 import { config } from '../config/config';
+import { MetricDataResult } from '../types/metrics';
 
 if (!config) {
     throw new Error('Configuration not initialized');
@@ -100,7 +101,11 @@ export class AwsService {
                 throw new Error('No metric data returned');
             }
 
-            return data.MetricDataResults[0];
+            // Transform AWS SDK response to our MetricDataResult type
+            return {
+                Timestamps: data.MetricDataResults[0].Timestamps || [],
+                Values: data.MetricDataResults[0].Values || []
+            };
         } catch (error) {
             console.error("Error fetching CloudWatch data:", error);
             throw error;
