@@ -1,169 +1,97 @@
-import { CloudWatch, GetMetricDataCommand, MetricDataQuery, MetricDataResult } from '@aws-sdk/client-cloudwatch';
-import { EC2, DescribeInstancesCommand } from '@aws-sdk/client-ec2';
+import { CloudWatchClient, GetMetricDataCommand, MetricDataResult } from '@aws-sdk/client-cloudwatch';
+import { EC2Client, DescribeInstancesCommand } from '@aws-sdk/client-ec2';
 
-interface MetricSummary {
-    metricName: string;
-    totalDataPoints: number;
-    timeRange: {
-        start: string;
-        end: string;
-    };
-    sampleDataPoints: Array<{
-        timestamp: string;
-        value: number;
-    }>;
-    statistics: {
-        average: number;
-        maximum: number;
-        minimum: number;
-        median: number;
-        percentile95: number;
-    };
-    highUsageAnalysis: {
-        periodsAbove90Percent: number;
-        percentageOfTotal: number;
-    };
-}
+const awsConfig = {
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
+};
 
 export class AwsService {
-    private cloudWatch: CloudWatch;
-    private ec2: EC2;
+    private cloudWatchClient: CloudWatchClient;
+    private ec2Client: EC2Client;
 
     constructor() {
-        this.cloudWatch = new CloudWatch({});
-        this.ec2 = new EC2({});
+        this.cloudWatchClient = new CloudWatchClient(awsConfig);
+        this.ec2Client = new EC2Client(awsConfig);
     }
 
     /**
-     * Validates if an EC2 instance exists and is accessible
+     * Gets instance ID from private IP address
      */
-    async validateInstance(instanceId: string): Promise<boolean> {
-        try {
-            const command = new DescribeInstancesCommand({
-                InstanceIds: [instanceId]
-            });
-            const response = await this.ec2.send(command);
-            return response.Reservations?.[0]?.Instances?.[0]?.State?.Name === 'running';
-        } catch (error) {
-            console.error('Error validating instance:', error);
-            return false;
-        }
-    }
-
-    /**
-     * Creates a metric data query for CPU utilization
-     */
-    private createMetricQuery(instanceId: string, period: number): MetricDataQuery {
-        return {
-            Id: 'cpuUtilization',
-            MetricStat: {
-                Metric: {
-                    Namespace: 'AWS/EC2',
-                    MetricName: 'CPUUtilization',
-                    Dimensions: [
-                        {
-                            Name: 'InstanceId',
-                            Value: instanceId
-                        }
-                    ]
+    async getInstanceIdForIPAddress(ipAddress: string): Promise<string> {
+        const params = {
+            Filters: [
+                {
+                    Name: 'private-ip-address',
+                    Values: [ipAddress],
                 },
-                Period: period,
-                Stat: 'Average'
-            },
-            ReturnData: true
+            ],
         };
-    }
-
-    /**
-     * Processes metric data results into a summary
-     */
-    private processMetricData(metricData: MetricDataResult): MetricSummary {
-        if (!metricData.Timestamps || !metricData.Values) {
-            throw new Error('Invalid metric data: missing timestamps or values');
-        }
-
-        const values = metricData.Values.map(v => Number(v));
-        const sortedValues = [...values].sort((a, b) => a - b);
-        
-        // Calculate statistics
-        const average = values.reduce((a, b) => a + b, 0) / values.length;
-        const maximum = Math.max(...values);
-        const minimum = Math.min(...values);
-        const median = sortedValues[Math.floor(sortedValues.length / 2)];
-        const percentile95 = sortedValues[Math.floor(sortedValues.length * 0.95)];
-        
-        // Calculate high usage periods
-        const highUsageCount = values.filter(v => v > 90).length;
-        const highUsagePercentage = (highUsageCount / values.length) * 100;
-
-        // Get sample data points (first 5)
-        const sampleDataPoints = metricData.Timestamps.slice(0, 5).map((timestamp, index) => ({
-            timestamp,
-            value: values[index]
-        }));
-
-        return {
-            metricName: metricData.Label || 'CPUUtilization',
-            totalDataPoints: values.length,
-            timeRange: {
-                start: metricData.Timestamps[0],
-                end: metricData.Timestamps[metricData.Timestamps.length - 1]
-            },
-            sampleDataPoints,
-            statistics: {
-                average,
-                maximum,
-                minimum,
-                median,
-                percentile95
-            },
-            highUsageAnalysis: {
-                periodsAbove90Percent: highUsageCount,
-                percentageOfTotal: highUsagePercentage
-            }
-        };
-    }
-
-    /**
-     * Fetches and processes CPU utilization metrics for an EC2 instance
-     */
-    async getCpuUtilizationMetrics(params: {
-        instanceId: string;
-        periodDays?: number;
-        period?: number;
-    }): Promise<MetricSummary> {
-        const { instanceId, periodDays = 7, period = 1800 } = params;
-
-        // Validate instance
-        const isValid = await this.validateInstance(instanceId);
-        if (!isValid) {
-            throw new Error(`Invalid or inaccessible instance: ${instanceId}`);
-        }
-
-        // Calculate time range
-        const endTime = new Date();
-        const startTime = new Date(endTime.getTime() - (periodDays * 24 * 60 * 60 * 1000));
-
-        // Create metric query
-        const metricQuery = this.createMetricQuery(instanceId, period);
 
         try {
-            const command = new GetMetricDataCommand({
-                MetricDataQueries: [metricQuery],
-                StartTime: startTime,
-                EndTime: endTime
-            });
+            const data = await this.ec2Client.send(new DescribeInstancesCommand(params));
 
-            const response = await this.cloudWatch.send(command);
-            
-            if (!response.MetricDataResults?.[0]) {
+            if (!data.Reservations?.[0]?.Instances?.[0]?.InstanceId) {
+                throw new Error('No instance found for the given IP address');
+            }
+
+            return data.Reservations[0].Instances[0].InstanceId;
+        } catch (error) {
+            console.error(`Error fetching instance ID from IP: ${ipAddress}, error:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Gets CPU utilization metrics from CloudWatch
+     */
+    async getMetricDataFromCloudWatch(
+        instanceId: string,
+        startTime: Date,
+        endTime: Date,
+        period: number = 1800
+    ): Promise<MetricDataResult> {
+        const params = {
+            StartTime: startTime,
+            EndTime: endTime,
+            MetricDataQueries: [
+                {
+                    Id: 'cpuUtilization',
+                    MetricStat: {
+                        Metric: {
+                            Namespace: 'AWS/EC2',
+                            MetricName: 'CPUUtilization',
+                            Dimensions: [
+                                {
+                                    Name: 'InstanceId',
+                                    Value: instanceId,
+                                },
+                            ],
+                        },
+                        Period: period,
+                        Stat: 'Average'
+                    },
+                    ReturnData: true,
+                },
+            ],
+        };
+
+        try {
+            const data = await this.cloudWatchClient.send(
+                new GetMetricDataCommand(params)
+            );
+
+            if (!data.MetricDataResults?.[0]) {
                 throw new Error('No metric data returned');
             }
 
-            return this.processMetricData(response.MetricDataResults[0]);
+            return data.MetricDataResults[0];
         } catch (error) {
-            console.error('Error fetching metric data:', error);
-            throw new Error(`Failed to fetch metric data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            console.error("Error fetching CloudWatch data:", error);
+            throw error;
         }
     }
 }
@@ -173,27 +101,18 @@ export class AwsService {
 const awsService = new AwsService();
 
 try {
-    const metrics = await awsService.getCpuUtilizationMetrics({
-        instanceId: 'i-04a68bbbcac63d5cb',
-        periodDays: 7,
-        period: 1800
-    });
+    // Get instance ID from IP
+    const instanceId = await awsService.getInstanceIdForIPAddress('10.0.0.1');
     
-    console.log('Metric Summary:', {
-        name: metrics.metricName,
-        totalPoints: metrics.totalDataPoints,
-        timeRange: metrics.timeRange,
-        statistics: {
-            average: `${metrics.statistics.average.toFixed(2)}%`,
-            maximum: `${metrics.statistics.maximum.toFixed(2)}%`,
-            minimum: `${metrics.statistics.minimum.toFixed(2)}%`,
-            median: `${metrics.statistics.median.toFixed(2)}%`,
-            percentile95: `${metrics.statistics.percentile95.toFixed(2)}%`
-        },
-        highUsage: {
-            periodsAbove90: metrics.highUsageAnalysis.periodsAbove90Percent,
-            percentage: `${metrics.highUsageAnalysis.percentageOfTotal.toFixed(2)}%`
-        }
+    // Get metrics
+    const endTime = new Date();
+    const startTime = new Date(endTime.getTime() - (7 * 24 * 60 * 60 * 1000)); // 7 days ago
+    const metrics = await awsService.getMetricDataFromCloudWatch(instanceId, startTime, endTime);
+    
+    console.log('CPU Metrics:', {
+        timestamps: metrics.Timestamps,
+        values: metrics.Values,
+        label: metrics.Label
     });
 } catch (error) {
     console.error('Error:', error);
