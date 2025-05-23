@@ -19,6 +19,8 @@ const TIME_RANGE_OPTIONS = [
   'Last 7 Days',
 ];
 
+const PERIOD_OPTIONS = [1, 5, 10, 20, 30];
+
 const MetricsForm: React.FC<MetricsFormProps> = ({ onSubmit, isLoading }) => {
   const [formData, setFormData] = useState<MetricsQueryParams>({
     ipAddress: '',
@@ -72,17 +74,17 @@ const MetricsForm: React.FC<MetricsFormProps> = ({ onSubmit, isLoading }) => {
 
       <div className="form-group">
         <label htmlFor="period">Interval (seconds):</label>
-        <input
-          type="number"
+        <select
           id="period"
           name="period"
           value={formData.period}
           onChange={handleChange}
-          min="1"
-          max="86400"
-          step="1"
           required
-        />
+        >
+          {PERIOD_OPTIONS.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
       </div>
 
       <button type="submit" disabled={isLoading}>
