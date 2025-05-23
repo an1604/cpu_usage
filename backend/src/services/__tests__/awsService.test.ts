@@ -1,9 +1,7 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
-import { AwsService } from '../awsService';
+import { awsService } from '../awsService';
 
 describe('AwsService', () => {
-    let awsService: AwsService;
-    
     const isCI = () => process.env.CI === 'true';
     
     beforeEach(() => {
@@ -21,7 +19,6 @@ describe('AwsService', () => {
             throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
         }
         
-        awsService = new AwsService();
     });
     
     describe('getInstanceIdForIPAddress', () => {

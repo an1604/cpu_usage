@@ -16,12 +16,20 @@ const awsConfig = {
 } as const;
 
 export class AwsService {
+    private static instance: AwsService;
     private cloudWatchClient: CloudWatchClient;
     private ec2Client: EC2Client;
 
-    constructor() {
+    private constructor() {
         this.cloudWatchClient = new CloudWatchClient(awsConfig);
         this.ec2Client = new EC2Client(awsConfig);
+    }
+
+    public static getInstance(): AwsService {
+        if (!AwsService.instance) {
+            AwsService.instance = new AwsService();
+        }
+        return AwsService.instance;
     }
 
     /**
@@ -112,3 +120,5 @@ export class AwsService {
         }
     }
 }
+
+export const awsService = AwsService.getInstance();
