@@ -20,7 +20,7 @@ describe('Metrics Controller', () => {
     mockReq = {
       body: {
         ipAddress: '172.31.88.161',
-        periodDays: 1,
+        timeRange: 'Last Day',
         period: 3600
       }
     };
@@ -39,7 +39,7 @@ describe('Metrics Controller', () => {
     mockGetInstanceId.mockResolvedValue(mockInstanceId);
     mockGetMetrics.mockResolvedValue(mockMetricData);
 
-    const result = await getCpuUsage(mockReq.body.ipAddress, mockReq.body.periodDays, mockReq.body.period);
+    const result = await getCpuUsage(mockReq.body.ipAddress, mockReq.body.timeRange, mockReq.body.period);
 
     expect(result).toEqual({
       Timestamps: mockMetricData.Timestamps,
@@ -50,11 +50,11 @@ describe('Metrics Controller', () => {
   it('should handle invalid parameter types', async () => {
     mockReq.body = {
       ipAddress: '172.31.88.161',
-      periodDays: '1' as any, // Invalid type
+      timeRange: 'Last Day' as any, // Invalid type
       period: 3600
     };
 
-    await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.periodDays, mockReq.body.period))
+    await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.timeRange, mockReq.body.period))
       .rejects
       .toThrow('Error retrieving CPU usage');
   });
