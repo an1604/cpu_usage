@@ -13,15 +13,9 @@ jest.mock('../../services/awsService', () => ({
 
 describe('Metrics Controller', () => {
   let mockReq: Partial<Request>;
-  let mockRes: Partial<Response>;
   
   beforeEach(() => {
     jest.clearAllMocks();
-
-    mockRes = {
-      status: jest.fn().mockReturnThis() as unknown as Response['status'],
-      json: jest.fn() as unknown as Response['json']
-    };
 
     mockReq = {
       body: {
@@ -45,10 +39,9 @@ describe('Metrics Controller', () => {
     mockGetInstanceId.mockResolvedValue(mockInstanceId);
     mockGetMetrics.mockResolvedValue(mockMetricData);
 
-    await getCpuUsage(mockReq as Request, mockRes as Response);
+    const result = await getCpuUsage(mockReq.body.ipAddress, mockReq.body.periodDays, mockReq.body.period);
 
-    expect(mockRes.status).toHaveBeenCalledWith(200);
-    expect(mockRes.json).toHaveBeenCalledWith({
+    expect(result).toEqual({
       Timestamps: mockMetricData.Timestamps,
       Values: mockMetricData.Values
     });
@@ -61,12 +54,9 @@ describe('Metrics Controller', () => {
       period: 3600
     };
 
-    await getCpuUsage(mockReq as Request, mockRes as Response);
-
-    expect(mockRes.status).toHaveBeenCalledWith(400);
-    expect(mockRes.json).toHaveBeenCalledWith({
-      error: 'Invalid parameter types. periodDays and period must be numbers'
-    });
+    await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.periodDays, mockReq.body.period))
+      .rejects
+      .toThrow('Error retrieving CPU usage');
   });
 
   it('should handle error when instance ID is not found', async () => {
@@ -75,14 +65,9 @@ describe('Metrics Controller', () => {
     
     mockGetInstanceId.mockRejectedValue(new Error(errorMessage));
 
-    await getCpuUsage(mockReq as Request, mockRes as Response);
-
-    expect(mockRes.status).toHaveBeenCalledWith(500);
-    expect(mockRes.json).toHaveBeenCalledWith({
-      status: 500,
-      message: 'Error retrieving CPU usage',
-      error: errorMessage
-    });
+    await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.periodDays, mockReq.body.period))
+      .rejects
+      .toThrow('Error retrieving CPU usage');
   });
 
   it('should handle error when getting metrics fails', async () => {
@@ -95,13 +80,8 @@ describe('Metrics Controller', () => {
     mockGetInstanceId.mockResolvedValue(mockInstanceId);
     mockGetMetrics.mockRejectedValue(new Error(errorMessage));
     
-    await getCpuUsage(mockReq as Request, mockRes as Response);
-
-    expect(mockRes.status).toHaveBeenCalledWith(500);
-    expect(mockRes.json).toHaveBeenCalledWith({
-      status: 500,
-      message: 'Error retrieving CPU usage',
-      error: errorMessage
-    });
+    await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.periodDays, mockReq.body.period))
+      .rejects
+      .toThrow('Error retrieving CPU usage');
   });
 }); 
