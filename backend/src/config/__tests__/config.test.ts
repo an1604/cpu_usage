@@ -1,5 +1,6 @@
 /// <reference types="jest" />
 import { Config } from '../config';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 describe('Config', () => {
   const originalEnv = process.env;
