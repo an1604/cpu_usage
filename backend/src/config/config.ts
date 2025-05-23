@@ -1,5 +1,8 @@
 import * as dotenv from 'dotenv';
+
 import { z } from 'zod';
+
+dotenv.config();
 
 const envSchema = z.object({
   PORT: z.string().default('3000'),
@@ -8,6 +11,7 @@ const envSchema = z.object({
   AWS_REGION: z.string(),
   INSTANCE_ID: z.string(),
   EC2_IP_ADDRESS: z.string(),
+  CI: z.string().default('false'),
 });
 
 type EnvSchema = z.infer<typeof envSchema>;
@@ -17,15 +21,16 @@ export class Config {
   private readonly config: EnvSchema;
 
   private constructor() {
-    dotenv.config();
-
+    console.log('Initializing Config...');
     const parsed = envSchema.safeParse(process.env);
-
+    
     if (!parsed.success) {
+      console.error('Environment validation errors:', parsed.error.errors);
       throw new Error(`Environment variables validation failed: ${parsed.error.message}`);
     }
 
     this.config = parsed.data;
+    console.log('Config initialized successfully');
   }
 
   public static getInstance(): Config {
@@ -66,4 +71,4 @@ export class Config {
 }
 
 // Export a singleton instance for use in production, but not during tests
-export const config = process.env.NODE_ENV === 'test' ? undefined : Config.getInstance();
+export const config = Config.getInstance();
