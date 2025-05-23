@@ -56,22 +56,22 @@ jobs:
     - name: Test container with mock credentials
       working-directory: ./backend
       run: |
-        docker run -p 3000:3000 `
-        -e AWS_ACCESS_ID=test `
-        -e AWS_SECRET_ACCESS_KEY=test `
-        -e AWS_REGION=us-east-1 `
-        -e EC2_IP_ADDRESS=127.0.0.1 `
-        -e INSTANCE_ID=i-01234567890123456 `
-        -e PORT=3000 `
-        -e CI=false `
-        -e CORS_ORIGIN=http://localhost:8080 `
+        docker run -p 3000:3000 \
+        -e AWS_ACCESS_ID=test \
+        -e AWS_SECRET_ACCESS_KEY=test \
+        -e AWS_REGION=us-east-1 \
+        -e EC2_IP_ADDRESS=127.0.0.1 \
+        -e INSTANCE_ID=i-01234567890123456 \
+        -e PORT=3000 \
+        -e CI=false \
+        -e CORS_ORIGIN=http://localhost:8080 \
         backend-test
 
+    - name: Verify container is running
+      run: |
         sleep 5
         docker ps
         docker logs backend-test
-      - name: Verify container is running
-        run: |
         for i in {1..5}; do
           if docker ps | grep -q backend-test; then
             echo "Container is running"
@@ -84,12 +84,13 @@ jobs:
           exit 1
         fi
 
-      - name: Test container health endpoint
-        run: |
-          for i in {1..5}; do
-            if curl -f http://localhost:3000/health | grep -q "OK"; then
-              echo "Health endpoint is working"
-              break
-            fi
-            sleep 1
+    - name: Test container health endpoint
+      run: |
+        for i in {1..5}; do
+          if curl -f http://localhost:3000/health | grep -q "OK"; then
+            echo "Health endpoint is working"
+            break
+          fi
+          sleep 1
+        done
     
