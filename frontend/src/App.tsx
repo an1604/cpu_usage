@@ -43,7 +43,10 @@ function App() {
       <main className="App-main">
         <section className="form-section">
           <h2>Query Parameters</h2>
-          <MetricsForm onSubmit={handleMetricsSubmit} isLoading={isLoading} />
+          <div className="form-container">
+            <MetricsForm onSubmit={handleMetricsSubmit} isLoading={isLoading} />
+            {error && <ErrorMessage message={error} />}
+          </div>
         </section>
         
         {metricsData && (
