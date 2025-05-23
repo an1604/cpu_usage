@@ -4,7 +4,6 @@ import { errorHandler, ApiError } from '../errorHandler';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 describe('Error Handler Middleware', () => {
-    // Mock Express response object
     let mockResponse: Partial<Response>;
     let mockJson: jest.Mock;
     let mockStatus: jest.Mock;
