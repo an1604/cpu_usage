@@ -96,7 +96,7 @@ jobs:
           echo "Response body: $body"
           echo "Status code: $status_code"
           
-          if [ "$status_code" = "200" ] && echo "$body" | grep -q "OK"; then
+          if [ "$status_code" = "200" ] && echo "$body" | grep -q '"status":"ok"'; then
             echo "Health endpoint is working"
             exit 0
           fi
