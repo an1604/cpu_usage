@@ -7,9 +7,13 @@ export interface MetricsQueryParams {
 /**
  * Response data structure for metric results
  */
+export interface Datapoint {
+  Timestamp: string;
+  Average: number;
+}
+
 export interface MetricDataResult {
-  Timestamps: Date[];
-  Values: number[];
+  Datapoints: Datapoint[];
 }
 
 /**

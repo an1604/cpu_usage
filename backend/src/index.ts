@@ -8,7 +8,6 @@ const PORT = config.port;
 
 app.use(express.json());
 app.use(cors({
-  origin: config.corsOrigin,
   credentials: true
 }));
 
