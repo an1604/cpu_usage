@@ -1,6 +1,5 @@
 import { MetricDataResult, MetricsQueryParams, ErrorResponse } from '../types/metrics';
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
+import { config } from '../config/config';
 
 /**
  * Validates the metrics query parameters according to backend requirements
@@ -35,7 +34,7 @@ export async function fetchMetricsData(params: MetricsQueryParams): Promise<Metr
   console.log('[API] Sending request with params:', JSON.stringify(params, null, 2));
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/metrics/cpu-usage`, {
+    const response = await fetch(`${config.apiBaseUrl}/api/metrics/cpu-usage`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -19,12 +19,12 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": "src",
-    "paths": {
-      "chart.js": ["node_modules/chart.js/dist/chart.esm.js"]
-    }
+    "types": ["jest", "node", "@testing-library/jest-dom"]
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }
