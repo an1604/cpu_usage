@@ -1,13 +1,18 @@
 import { CloudWatchClient, GetMetricDataCommand, MetricDataResult } from '@aws-sdk/client-cloudwatch';
 import { EC2Client, DescribeInstancesCommand } from '@aws-sdk/client-ec2';
+import { config } from '../config/config';
+
+if (!config) {
+    throw new Error('Configuration not initialized');
+}
 
 const awsConfig = {
-    region: process.env.AWS_REGION,
+    region: config.awsRegion,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        accessKeyId: config.awsAccessId,
+        secretAccessKey: config.awsSecretAccessKey,
     }
-};
+} as const;
 
 export class AwsService {
     private cloudWatchClient: CloudWatchClient;
@@ -20,6 +25,8 @@ export class AwsService {
 
     /**
      * Gets instance ID from private IP address
+     * @param ipAddress - The private IP address of the EC2 instance to get the instance ID for
+     * @returns The instance ID of the EC2 instance
      */
     async getInstanceIdForIPAddress(ipAddress: string): Promise<string> {
         const params = {
@@ -37,8 +44,8 @@ export class AwsService {
             if (!data.Reservations?.[0]?.Instances?.[0]?.InstanceId) {
                 throw new Error('No instance found for the given IP address');
             }
-
-            return data.Reservations[0].Instances[0].InstanceId;
+            const instanceId = data.Reservations[0].Instances[0].InstanceId;
+            return instanceId;
         } catch (error) {
             console.error(`Error fetching instance ID from IP: ${ipAddress}, error:`, error);
             throw error;
@@ -47,6 +54,11 @@ export class AwsService {
 
     /**
      * Gets CPU utilization metrics from CloudWatch
+     * @param instanceId - The ID of the EC2 instance to get metrics for
+     * @param startTime - The start time of the metrics to get
+     * @param endTime - The end time of the metrics to get
+     * @param period - The period of the metrics to get
+     * @returns The CPU utilization metrics
      */
     async getMetricDataFromCloudWatch(
         instanceId: string,
@@ -95,26 +107,3 @@ export class AwsService {
         }
     }
 }
-
-// Example usage:
-/*
-const awsService = new AwsService();
-
-try {
-    // Get instance ID from IP
-    const instanceId = await awsService.getInstanceIdForIPAddress('10.0.0.1');
-    
-    // Get metrics
-    const endTime = new Date();
-    const startTime = new Date(endTime.getTime() - (7 * 24 * 60 * 60 * 1000)); // 7 days ago
-    const metrics = await awsService.getMetricDataFromCloudWatch(instanceId, startTime, endTime);
-    
-    console.log('CPU Metrics:', {
-        timestamps: metrics.Timestamps,
-        values: metrics.Values,
-        label: metrics.Label
-    });
-} catch (error) {
-    console.error('Error:', error);
-}
-*/
