@@ -4,16 +4,16 @@ import { errorHandler, ApiError } from '../errorHandler';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 describe('Error Handler Middleware', () => {
-    let mockResponse: Partial<Response>;
+    let mockResponse: any;
     let mockJson: jest.Mock;
     let mockStatus: jest.Mock;
 
     beforeEach(() => {
-        mockJson = jest.fn().mockReturnThis();
-        mockStatus = jest.fn().mockReturnThis();
+        mockJson = jest.fn();
+        mockStatus = jest.fn().mockReturnValue({ json: mockJson });
         mockResponse = {
-            status: mockStatus as unknown as (code: number) => Response,
-            json: mockJson as unknown as Response['json']
+            status: mockStatus,
+            json: mockJson
         };
     });
 
@@ -23,7 +23,7 @@ describe('Error Handler Middleware', () => {
         errorHandler(
             apiError,
             {} as Request,
-            mockResponse as Response,
+            mockResponse,
             jest.fn()
         );
 
@@ -46,7 +46,7 @@ describe('Error Handler Middleware', () => {
             errorHandler(
                 zodError,
                 {} as Request,
-                mockResponse as Response,
+                mockResponse,
                 jest.fn()
             );
 
@@ -66,7 +66,7 @@ describe('Error Handler Middleware', () => {
         errorHandler(
             awsError,
             {} as Request,
-            mockResponse as Response,
+            mockResponse,
             jest.fn()
         );
 
@@ -84,7 +84,7 @@ describe('Error Handler Middleware', () => {
         errorHandler(
             unknownError,
             {} as Request,
-            mockResponse as Response,
+            mockResponse,
             jest.fn()
         );
 
