@@ -1,0 +1,95 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Run backend tests
+      working-directory: ./backend
+      run: npx jest --verbose --no-cache
+      env:
+        NODE_ENV: test
+        PORT: '3000'
+        AWS_ACCESS_ID: 'dummy'
+        AWS_SECRET_ACCESS_KEY: 'dummy'
+        AWS_REGION: 'us-east-1'
+        INSTANCE_ID: 'dummy'
+        EC2_IP_ADDRESS: 'dummy'
+        CI: 'true'
+  
+  test-docker:
+    name: Docker Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build Docker image
+      working-directory: ./backend
+      run: docker build -t backend-test .
+
+    - name: Test container with mock credentials
+      working-directory: ./backend
+      run: |
+        docker run -p 3000:3000 `
+        -e AWS_ACCESS_ID=test `
+        -e AWS_SECRET_ACCESS_KEY=test `
+        -e AWS_REGION=us-east-1 `
+        -e EC2_IP_ADDRESS=127.0.0.1 `
+        -e INSTANCE_ID=i-01234567890123456 `
+        -e PORT=3000 `
+        -e CI=false `
+        -e CORS_ORIGIN=http://localhost:8080 `
+        backend-test
+
+        sleep 5
+        docker ps
+        docker logs backend-test
+      - name: Verify container is running
+        run: |
+        for i in {1..5}; do
+          if docker ps | grep -q backend-test; then
+            echo "Container is running"
+            break
+          fi
+          sleep 1
+        done
+        if ! docker ps | grep -q backend-test; then
+          echo "Container failed to start"
+          exit 1
+        fi
+
+      - name: Test container health endpoint
+        run: |
+          for i in {1..5}; do
+            if curl -f http://localhost:3000/health | grep -q "OK"; then
+              echo "Health endpoint is working"
+              break
+            fi
+            sleep 1
+    
