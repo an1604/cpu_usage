@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import MetricsForm from './components/MetricsForm';
 import ErrorMessage from './components/ErrorMessage';
+import { fetchMetricsData } from './services/api';
+import { MetricDataResult } from './types/metrics';
 import './App.css';
-
-interface MetricDataResult {
-  Timestamps: string[];
-  Values: number[];
-}
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,17 +15,12 @@ function App() {
     setError(null);
     
     try {
-      // TODO: Implement actual API call here
-      console.log('Form submitted with params:', params);
-      // For now, just simulate an API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setMetricsData({
-        Timestamps: ['2024-03-20T00:00:00Z'],
-        Values: [50]
-      });
+      const data = await fetchMetricsData(params);
+      setMetricsData(data);
     } catch (err) {
-      setError('Failed to fetch metrics data. Please try again.');
-      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch metrics data. Please try again.';
+      setError(errorMessage);
+      console.error('Error fetching metrics:', err);
     } finally {
       setIsLoading(false);
     }
