@@ -6,8 +6,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test": "jest --verbose --no-cache",
+    "test:watch": "jest --watch --verbose --no-cache"
   },
   "keywords": [],
   "author": "",
