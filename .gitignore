@@ -1,3 +1,4 @@
 .env
 node_modules
 detailed-specification.md
+*storybook.log
