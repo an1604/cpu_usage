@@ -56,22 +56,23 @@ jobs:
     - name: Test container with mock credentials
       working-directory: ./backend
       run: |
-        docker run -p 3000:3000 `
-        -e AWS_ACCESS_ID=test `
-        -e AWS_SECRET_ACCESS_KEY=test `
-        -e AWS_REGION=us-east-1 `
-        -e EC2_IP_ADDRESS=127.0.0.1 `
-        -e INSTANCE_ID=i-01234567890123456 `
-        -e PORT=3000 `
-        -e CI=false `
-        -e CORS_ORIGIN=http://localhost:8080 `
+        docker run -d -p 3000:3000 \
+        -e AWS_ACCESS_ID=test \
+        -e AWS_SECRET_ACCESS_KEY=test \
+        -e AWS_REGION=us-east-1 \
+        -e EC2_IP_ADDRESS=127.0.0.1 \
+        -e INSTANCE_ID=i-01234567890123456 \
+        -e PORT=3000 \
+        -e CI=false \
+        -e CORS_ORIGIN=http://localhost:8080 \
+        --name backend-test \
         backend-test
 
+    - name: Verify container is running
+      run: |
         sleep 5
         docker ps
         docker logs backend-test
-      - name: Verify container is running
-        run: |
         for i in {1..5}; do
           if docker ps | grep -q backend-test; then
             echo "Container is running"
@@ -84,12 +85,26 @@ jobs:
           exit 1
         fi
 
-      - name: Test container health endpoint
-        run: |
-          for i in {1..5}; do
-            if curl -f http://localhost:3000/health | grep -q "OK"; then
-              echo "Health endpoint is working"
-              break
-            fi
-            sleep 1
+    - name: Test container health endpoint
+      run: |
+        for i in {1..5}; do
+          echo "Attempt $i to check health endpoint..."
+          response=$(curl -f -s -w "\n%{http_code}" --max-time 5 http://localhost:3000/health)
+          status_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "Response body: $body"
+          echo "Status code: $status_code"
+          
+          if [ "$status_code" = "200" ] && echo "$body" | grep -q '"status":"ok"'; then
+            echo "Health endpoint is working"
+            exit 0
+          fi
+          
+          if [ $i -lt 5 ]; then
+            echo "Health check failed, waiting before retry..."
+            sleep 2
+          fi
+        done
+        exit 1
     
