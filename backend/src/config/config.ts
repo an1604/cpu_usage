@@ -12,6 +12,7 @@ const envSchema = z.object({
   INSTANCE_ID: z.string(),
   EC2_IP_ADDRESS: z.string(),
   CI: z.string().default('false'),
+  CORS_ORIGIN: z.string().default('http://localhost:8080'),
 });
 
 type EnvSchema = z.infer<typeof envSchema>;
@@ -67,6 +68,10 @@ export class Config {
 
   public get ec2IpAddress(): string {
     return this.config.EC2_IP_ADDRESS;
+  }
+
+  public get corsOrigin(): string {
+    return this.config.CORS_ORIGIN;
   }
 }
 
