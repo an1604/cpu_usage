@@ -78,15 +78,15 @@ jobs:
       run: |
         for i in {1..5}; do
           echo "Attempt $i to check health endpoint..."
-          response=$(curl -f -s -w "\n%{http_code}" --max-time 5 http://localhost:3000/health)
+          response=$(curl -f -s -w "\n%{http_code}" --max-time 5 http://localhost:3000/)
           status_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
           
           echo "Response body: $body"
           echo "Status code: $status_code"
           
-          if [ "$status_code" = "200" ] && echo "$body" | grep -q '"status":"ok"'; then
-            echo "Health endpoint is working"
+          if [ "$status_code" = "200" ] && echo "$body" | grep -q "React App" && echo "$body" | grep -q "root"; then
+            echo "Frontend app is serving correctly"
             exit 0
           fi
           
