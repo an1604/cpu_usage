@@ -30,19 +30,15 @@ function validateMetricsParams(params: MetricsQueryParams): void {
  */
 function formatTimestampToTime(timestamp: string): string {
     const date = new Date(timestamp);
-    console.log('[API-formatTimestampToTime] Formatted timestamp:', date.toLocaleTimeString('en-US', {
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    }));
-
-    return date.toLocaleTimeString('en-US', {
+    const formattedTime = date.toLocaleTimeString('en-US', {
         hour12: false,
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'
     });
+    console.log('[API-formatTimestampToTime] Formatted timestamp:', formattedTime);
+
+    return formattedTime;
 }
 
 /**
