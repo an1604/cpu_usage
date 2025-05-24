@@ -34,7 +34,8 @@ export async function fetchMetricsData(params: MetricsQueryParams): Promise<Metr
   console.log('[API] Sending request with params:', JSON.stringify(params, null, 2));
 
   try {
-    const response = await fetch(`${config.apiBaseUrl}/api/metrics/cpu-usage`, {
+    console.log('[API] Sending request to backend URL:', config.backendUrl);
+    const response = await fetch(`${config.backendUrl}/api/metrics/cpu-usage`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,15 +46,13 @@ export async function fetchMetricsData(params: MetricsQueryParams): Promise<Metr
         period: Number(params.period)
       })
     });
-
     console.log('[API] Response status:', response.status);
-    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[API] Error response:', errorText);
       throw new Error(errorText || 'Failed to fetch metrics data');
     }
-
+    console.log('[API] Response:', response);
     const data = await response.json();
     console.log('[API] Received data:', JSON.stringify(data, null, 2));
 
