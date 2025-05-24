@@ -6,3 +6,4 @@ import '@testing-library/jest-dom';
 
 // Set default environment variables for tests
 process.env.REACT_APP_API_BASE_URL = 'http://test-api.example.com';
+process.env.REACT_APP_BACKEND_URL = 'http://test-backend.example.com';
