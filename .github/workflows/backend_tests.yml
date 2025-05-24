@@ -1,4 +1,4 @@
-name: Test Suite
+name: Test Suite - Backend
 
 on:
   push:
@@ -56,7 +56,7 @@ jobs:
     - name: Test container with mock credentials
       working-directory: ./backend
       run: |
-        docker run -d -p 3000:3000 \
+        docker run -d -p 5000:5000 \
         -e AWS_ACCESS_ID=test \
         -e AWS_SECRET_ACCESS_KEY=test \
         -e AWS_REGION=us-east-1 \
@@ -64,7 +64,6 @@ jobs:
         -e INSTANCE_ID=i-01234567890123456 \
         -e PORT=5000 \
         -e CI=false \
-        -e CORS_ORIGIN=http://localhost:8080 \
         --name backend-test \
         backend-test
 
@@ -89,7 +88,7 @@ jobs:
       run: |
         for i in {1..5}; do
           echo "Attempt $i to check health endpoint..."
-          response=$(curl -f -s -w "\n%{http_code}" --max-time 5 http://localhost:3000/health)
+          response=$(curl -f -s -w "\n%{http_code}" --max-time 5 http://localhost:5000/health)
           status_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
           
