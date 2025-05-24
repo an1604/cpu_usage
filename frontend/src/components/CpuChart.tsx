@@ -12,11 +12,6 @@ export const CpuChart: React.FC<CpuChartProps> = ({ data, isLoading }) => {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
 
-  const formatTimestamp = (timestamp: string): string => {
-    const date = new Date(timestamp);
-    return date.toLocaleString();
-  };
-
   useEffect(() => {
     if (chartInstance.current) {
       chartInstance.current.destroy();
@@ -30,11 +25,11 @@ export const CpuChart: React.FC<CpuChartProps> = ({ data, isLoading }) => {
     const config: ChartConfiguration<'line'> = {
       type: 'line',
       data: {
-        labels: data.Datapoints.map(point => formatTimestamp(point.Timestamp)),
+        labels: data.Timestamps,
         datasets: [
           {
             label: 'CPU Usage (%)',
-            data: data.Datapoints.map(point => point.Average),
+            data: data.Values,
             borderColor: 'rgb(255, 99, 132)',
             backgroundColor: 'rgba(255, 99, 132, 0.2)',
             borderWidth: 2,
@@ -53,14 +48,25 @@ export const CpuChart: React.FC<CpuChartProps> = ({ data, isLoading }) => {
               display: true,
               text: 'Time',
             },
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
           },
           y: {
-            beginAtZero: true,
+            beginAtZero: false,
             title: {
               display: true,
               text: 'CPU Usage (%)',
             },
-            max: 100,
+            min: 0.5,
+            max: 3.0,
+            ticks: {
+              stepSize: 0.5,
+              callback: function(tickValue: number | string) {
+                return typeof tickValue === 'number' ? tickValue.toFixed(1) : tickValue;
+              }
+            }
           },
         },
         plugins: {

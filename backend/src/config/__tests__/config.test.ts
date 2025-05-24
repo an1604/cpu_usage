@@ -37,7 +37,7 @@ describe('Config', () => {
       process.env.EC2_IP_ADDRESS = '127.0.0.1';
 
       const config = Config.getInstance();
-      expect(config.port).toBe('3000');
+      expect(config.port).toBe('5000');
     });
 
     it('should successfully initialize with all required environment variables', () => {

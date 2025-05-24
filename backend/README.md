@@ -19,7 +19,7 @@ The following environment variables must be set for the backend to function:
 - `AWS_REGION`: AWS region (e.g., `us-east-1`)
 - `EC2_IP_ADDRESS`: Private IP address of the EC2 instance
 - `INSTANCE_ID`: EC2 instance ID
-- `PORT`: Port for the server (default: 3000)
+- `PORT`: Port for the server (default: 5000)
 - `CORS_ORIGIN`: Allowed CORS origin (e.g., `http://localhost:8080`)
 - `CI`: Set to `false` unless running in CI
 
@@ -40,7 +40,7 @@ docker run -p 3000:3000 \
   -e AWS_REGION=us-east-1 \
   -e EC2_IP_ADDRESS=your_ec2_ip \
   -e INSTANCE_ID=your_instance_id \
-  -e PORT=3000 \
+  -e PORT=5000 \
   -e CORS_ORIGIN=http://localhost:8080 \
   -e CI=false \
   faddom-backend
