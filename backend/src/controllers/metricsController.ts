@@ -15,7 +15,6 @@ export async function getCpuUsage(ipAddress: string, timeRange: string, period: 
       throw new Error('Invalid parameter types. timeRange must be a string and period must be a number');
     }
 
-    // Validate time range
     const validTimeRanges = ['Last Hour', 'Last 6 Hours', 'Last 12 Hours', 'Last Day', 'Last 7 Days'];
     if (!validTimeRanges.includes(timeRange)) {
       throw new Error(`Invalid time range. Must be one of: ${validTimeRanges.join(', ')}`);

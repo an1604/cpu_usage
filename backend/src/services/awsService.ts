@@ -29,14 +29,14 @@ export class AwsService {
     } as const;
 
     private constructor() {
-        console.log('[AwsService] Initializing AWS service with region:', config.awsRegion);
+        console.log('[AwsService-constructor] Initializing AWS service with region:', config.awsRegion);
         this.cloudWatchClient = new CloudWatchClient(awsConfig);
         this.ec2Client = new EC2Client(awsConfig);
     }
 
     public static getInstance(): AwsService {
         if (!AwsService.instance) {
-            console.log('[AwsService] Creating new AWS service instance');
+            console.log('[AwsService-getInstance] Creating new AWS service instance');
             AwsService.instance = new AwsService();
         }
         return AwsService.instance;
@@ -48,7 +48,7 @@ export class AwsService {
      * @returns The instance ID of the EC2 instance
      */
     async getInstanceIdForIPAddress(ipAddress: string): Promise<string> {
-        console.log('[AwsService] Looking up instance ID for IP:', ipAddress);
+        console.log('[AwsService-getInstanceIdForIPAddress] Looking up instance ID for IP:', ipAddress);
         
         const params = {
             Filters: [
@@ -60,19 +60,19 @@ export class AwsService {
         };
 
         try {
-            console.log('[AwsService] Sending DescribeInstances request to EC2');
+            console.log('[AwsService-getInstanceIdForIPAddress] Sending DescribeInstances request to EC2');
             const data = await this.ec2Client.send(new DescribeInstancesCommand(params));
 
             if (!data.Reservations?.[0]?.Instances?.[0]?.InstanceId) {
-                console.log('[AwsService] No instance found for IP:', ipAddress);
+                console.log('[AwsService-getInstanceIdForIPAddress] No instance found for IP:', ipAddress);
                 throw new Error('No instance found for the given IP address');
             }
             
             const instanceId = data.Reservations[0].Instances[0].InstanceId;
-            console.log('[AwsService] Found instance ID!');
+            console.log('[AwsService-getInstanceIdForIPAddress] Found instance ID!');
             return instanceId;
         } catch (error) {
-            console.error('[AwsService] Error fetching instance ID:', error);
+            console.error('[AwsService-getInstanceIdForIPAddress] Error fetching instance ID:', error);
             throw error;
         }
     }
