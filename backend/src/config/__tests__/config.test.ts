@@ -21,7 +21,6 @@ describe('Config', () => {
       delete process.env.AWS_ACCESS_ID;
       delete process.env.AWS_SECRET_ACCESS_KEY;
       delete process.env.AWS_REGION;
-      delete process.env.INSTANCE_ID;
       delete process.env.EC2_IP_ADDRESS;
 
       expect(() => {
@@ -33,7 +32,6 @@ describe('Config', () => {
       process.env.AWS_ACCESS_ID = 'test-id';
       process.env.AWS_SECRET_ACCESS_KEY = 'test-secret';
       process.env.AWS_REGION = 'us-east-1';
-      process.env.INSTANCE_ID = 'i-1234567890';
       process.env.EC2_IP_ADDRESS = '127.0.0.1';
 
       const config = Config.getInstance();
@@ -46,7 +44,6 @@ describe('Config', () => {
         AWS_ACCESS_ID: 'test-id',
         AWS_SECRET_ACCESS_KEY: 'test-secret',
         AWS_REGION: 'us-east-1',
-        INSTANCE_ID: 'i-1234567890',
         EC2_IP_ADDRESS: '127.0.0.1'
       };
 
@@ -58,7 +55,6 @@ describe('Config', () => {
       expect(config.awsAccessId).toBe(testEnv.AWS_ACCESS_ID);
       expect(config.awsSecretAccessKey).toBe(testEnv.AWS_SECRET_ACCESS_KEY);
       expect(config.awsRegion).toBe(testEnv.AWS_REGION);
-      expect(config.instanceId).toBe(testEnv.INSTANCE_ID);
       expect(config.ec2IpAddress).toBe(testEnv.EC2_IP_ADDRESS);
     });
   });
@@ -68,7 +64,6 @@ describe('Config', () => {
       process.env.AWS_ACCESS_ID = 'test-id';
       process.env.AWS_SECRET_ACCESS_KEY = 'test-secret';
       process.env.AWS_REGION = 'us-east-1';
-      process.env.INSTANCE_ID = 'i-1234567890';
       process.env.EC2_IP_ADDRESS = '127.0.0.1';
 
       const instance1 = Config.getInstance();

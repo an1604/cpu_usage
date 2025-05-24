@@ -38,8 +38,7 @@ docker run -p 3000:3000 \
   -e AWS_ACCESS_ID=your_aws_access_key_id \
   -e AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key \
   -e AWS_REGION=us-east-1 \
-  -e EC2_IP_ADDRESS=your_ec2_ip \
-  -e INSTANCE_ID=your_instance_id \
+  -e EC2_IP_ADDRESS=your_ec2_ip \ #for tests only - in production, you will insert the ip address at each time.
   -e PORT=5000 \
   -e CORS_ORIGIN=http://localhost:8080 \
   -e CI=false \
