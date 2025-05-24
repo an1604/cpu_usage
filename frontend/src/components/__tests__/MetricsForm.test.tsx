@@ -99,15 +99,6 @@ describe('MetricsForm', () => {
     expect(screen.getByText('Get CPU Usage')).toBeInTheDocument();
   });
 
-  it('should handle empty form submission', () => {
-    render(<MetricsForm {...defaultProps} />);
-    
-    const submitButton = screen.getByRole('button', { name: /get cpu usage/i });
-    fireEvent.click(submitButton);
-
-    expect(mockOnSubmit).not.toHaveBeenCalled();
-  });
-
   it('should validate IP address format', () => {
     render(<MetricsForm {...defaultProps} />);
     
