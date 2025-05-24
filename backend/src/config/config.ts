@@ -9,7 +9,6 @@ const envSchema = z.object({
   AWS_ACCESS_ID: z.string(),
   AWS_SECRET_ACCESS_KEY: z.string(),
   AWS_REGION: z.string(),
-  INSTANCE_ID: z.string(),
   EC2_IP_ADDRESS: z.string(),
   CI: z.string().default('false'),
 });
@@ -59,10 +58,6 @@ export class Config {
 
   public get awsRegion(): string {
     return this.config.AWS_REGION;
-  }
-
-  public get instanceId(): string {
-    return this.config.INSTANCE_ID;
   }
 
   public get ec2IpAddress(): string {

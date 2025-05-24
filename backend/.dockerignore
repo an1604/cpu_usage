@@ -1,0 +1,11 @@
+src/services/__tests__
+src/config/__tests__
+src/middleware/__tests__
+src/routes/__tests__
+
+node_modules
+jest.config.js
+README.md
+.env.*
+*.test.*
+*.log
