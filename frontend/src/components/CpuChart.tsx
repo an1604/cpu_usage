@@ -1,18 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
 import type { ChartConfiguration } from 'chart.js';
-import { MetricDataResult } from '../types/metrics';
-
-/**
- * CpuChartProps interface
- * This interface is used to define the props for the CpuChart component.
- * @param data - The data to display in the chart
- * @param isLoading - Whether the data is still loading
- */
-interface CpuChartProps {
-  data: MetricDataResult | null;
-  isLoading: boolean; 
-}
+import { CpuChartProps } from '../types/metrics';
 
 /**
  * Creates a chart configuration object for CPU usage visualization
