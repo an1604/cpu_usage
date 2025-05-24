@@ -1,50 +1,6 @@
 import React, { useState } from 'react';
-
-/**
- * MetricsQueryParams interface
- * This interface is used to define the parameters for the metrics query.
- * @param ipAddress - The IP address of the AWS instance
- * @param timeRange - The time range of the metrics
- * @param period - The period of the metrics
- */
-interface MetricsQueryParams {
-  ipAddress: string;
-  timeRange: string;
-  period: number;
-}
-
-/**
- * MetricsFormProps interface
- * This interface is used to define the props for the MetricsForm component.
- * @param onSubmit - The function to call when the form is submitted
- * @param isLoading - Whether the form is loading
- */
-interface MetricsFormProps {
-  onSubmit: (params: MetricsQueryParams) => void;
-  isLoading: boolean;
-}
-
-const TIME_RANGE_OPTIONS = [
-  'Last Hour',
-  'Last 6 Hours',
-  'Last 12 Hours',
-  'Last Day',
-  'Last 7 Days',
-];
-
-const PERIOD_OPTIONS = [
-  60,      // 1 minute
-  300,     // 5 minutes
-  600,     // 10 minutes
-  900,     // 15 minutes
-  1800,    // 30 minutes
-  3600,    // 1 hour
-  7200,    // 2 hours
-  14400,   // 4 hours
-  28800,   // 8 hours
-  43200,   // 12 hours
-  86400    // 24 hours
-];
+import { MetricsFormProps, MetricsQueryParams } from '../types/metrics';
+import { TIME_RANGE_OPTIONS, PERIOD_OPTIONS } from '../constants';
 
 const MetricsForm: React.FC<MetricsFormProps> = ({ onSubmit, isLoading }) => {
   const [formData, setFormData] = useState<MetricsQueryParams>({
