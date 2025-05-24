@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { awsService } from '../../services/awsService';
-import { getCpuUsage } from '../metricsController';
+import { getCpuUsage, validateParams } from '../metricsController';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // Mock the AWS service
@@ -83,5 +83,53 @@ describe('Metrics Controller', () => {
     await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.timeRange, mockReq.body.period))
       .rejects
       .toThrow(errorMessage);
+  });
+});
+
+describe('validateParams helper function', () => {
+  it('should validate correct parameters successfully', () => {
+    expect(() => validateParams('172.31.88.161', 'Last Hour', 300)).not.toThrow();
+    expect(() => validateParams('172.31.88.161', 'Last 6 Hours', 3600)).not.toThrow();
+    expect(() => validateParams('172.31.88.161', 'Last 12 Hours', 7200)).not.toThrow();
+    expect(() => validateParams('172.31.88.161', 'Last Day', 86400)).not.toThrow();
+    expect(() => validateParams('172.31.88.161', 'Last 7 Days', 86400)).not.toThrow();
+  });
+
+  it('should throw error for invalid timeRange type', () => {
+    expect(() => validateParams('172.31.88.161', undefined as any, 300))
+      .toThrow('Invalid parameter types. timeRange must be a string and period must be a number');
+    expect(() => validateParams('172.31.88.161', null as any, 300))
+      .toThrow('Invalid parameter types. timeRange must be a string and period must be a number');
+    expect(() => validateParams('172.31.88.161', 123 as any, 300))
+      .toThrow('Invalid parameter types. timeRange must be a string and period must be a number');
+  });
+
+  it('should throw error for invalid period type', () => {
+    expect(() => validateParams('172.31.88.161', 'Last Hour', '300' as any))
+      .toThrow('Invalid parameter types. timeRange must be a string and period must be a number');
+    expect(() => validateParams('172.31.88.161', 'Last Hour', undefined as any))
+      .toThrow('Invalid parameter types. timeRange must be a string and period must be a number');
+    expect(() => validateParams('172.31.88.161', 'Last Hour', null as any))
+      .toThrow('Invalid parameter types. timeRange must be a string and period must be a number');
+  });
+
+  it('should throw error for invalid timeRange values', () => {
+    expect(() => validateParams('172.31.88.161', 'Last 2 Hours', 300))
+      .toThrow('Invalid time range. Must be one of: Last Hour, Last 6 Hours, Last 12 Hours, Last Day, Last 7 Days');
+    expect(() => validateParams('172.31.88.161', 'Last Week', 300))
+      .toThrow('Invalid time range. Must be one of: Last Hour, Last 6 Hours, Last 12 Hours, Last Day, Last 7 Days');
+    expect(() => validateParams('172.31.88.161', '', 300))
+      .toThrow('Invalid time range. Must be one of: Last Hour, Last 6 Hours, Last 12 Hours, Last Day, Last 7 Days');
+  });
+
+  it('should throw error for invalid period values', () => {
+    expect(() => validateParams('172.31.88.161', 'Last Hour', 30))
+      .toThrow('Invalid period. Must be between 60 and 86400 seconds');
+    expect(() => validateParams('172.31.88.161', 'Last Hour', 0))
+      .toThrow('Invalid period. Must be between 60 and 86400 seconds');
+    expect(() => validateParams('172.31.88.161', 'Last Hour', 86401))
+      .toThrow('Invalid period. Must be between 60 and 86400 seconds');
+    expect(() => validateParams('172.31.88.161', 'Last Hour', 100000))
+      .toThrow('Invalid period. Must be between 60 and 86400 seconds');
   });
 }); 

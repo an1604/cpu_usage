@@ -1,6 +1,28 @@
 import { awsService } from '../services/awsService';
 
 /**
+ * Validate the parameters for the getCpuUsage function
+ * @param ipAddress - IP address of the AWS instance
+ * @param timeRange - Time range string (e.g., "Last Hour", "Last Day", "Last 7 Days")
+ * @param period - Interval between samples in seconds
+ */
+export function validateParams(ipAddress: string, timeRange: string, period: number) {
+  if (typeof timeRange !== 'string' || typeof period !== 'number') {
+    console.log('[MetricsController-getCpuUsage] Invalid parameter types:', { timeRange, period });
+    throw new Error('Invalid parameter types. timeRange must be a string and period must be a number');
+  }
+
+  const validTimeRanges = ['Last Hour', 'Last 6 Hours', 'Last 12 Hours', 'Last Day', 'Last 7 Days'];
+  if (!validTimeRanges.includes(timeRange)) {
+    throw new Error(`Invalid time range. Must be one of: ${validTimeRanges.join(', ')}`);
+  }
+
+  if (period < 60 || period > 86400) {
+    throw new Error('Invalid period. Must be between 60 and 86400 seconds');
+  }
+}
+
+/**
  * Get CPU usage metrics for a specified AWS instance
  * @param ipAddress - IP address of the AWS instance
  * @param timeRange - Time range string (e.g., "Last Hour", "Last Day", "Last 7 Days")
@@ -10,15 +32,7 @@ export async function getCpuUsage(ipAddress: string, timeRange: string, period: 
   console.log('[MetricsController-getCpuUsage] Starting CPU usage retrieval:', { ipAddress, timeRange, period });
   
   try {
-    if (typeof timeRange !== 'string' || typeof period !== 'number') {
-      console.log('[MetricsController-getCpuUsage] Invalid parameter types:', { timeRange, period });
-      throw new Error('Invalid parameter types. timeRange must be a string and period must be a number');
-    }
-
-    const validTimeRanges = ['Last Hour', 'Last 6 Hours', 'Last 12 Hours', 'Last Day', 'Last 7 Days'];
-    if (!validTimeRanges.includes(timeRange)) {
-      throw new Error(`Invalid time range. Must be one of: ${validTimeRanges.join(', ')}`);
-    }
+    validateParams(ipAddress, timeRange, period);
     
     console.log('[MetricsController-getCpuUsage] Getting instance ID for IP:', ipAddress);
     const instanceId = await awsService.getInstanceIdForIPAddress(ipAddress);
