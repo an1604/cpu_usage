@@ -55,13 +55,9 @@ describe('AwsService', () => {
             const ipAddress = process.env.EC2_IP_ADDRESS as string;
             const instanceId = await awsService.getInstanceIdForIPAddress(ipAddress);
             
-            const endTime = new Date();
-            const startTime = new Date(endTime.getTime() - 60 * 60 * 1000);
-            
             const metrics = await awsService.getMetricDataFromCloudWatch(
                 instanceId,
-                startTime,
-                endTime,
+                'Last Hour',
                 300 // 5-minute periods
             );
             
@@ -72,13 +68,11 @@ describe('AwsService', () => {
         
         test('should return empty data for invalid instance ID', async () => {
             const invalidInstanceId = 'i-invalid';
-            const endTime = new Date();
-            const startTime = new Date(endTime.getTime() - 60 * 60 * 1000);
             
             const metrics = await awsService.getMetricDataFromCloudWatch(
                 invalidInstanceId,
-                startTime,
-                endTime
+                'Last Hour',
+                300
             );
             
             expect(metrics).toBeDefined();

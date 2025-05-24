@@ -50,24 +50,24 @@ describe('Metrics Controller', () => {
   it('should handle invalid parameter types', async () => {
     mockReq.body = {
       ipAddress: '172.31.88.161',
-      timeRange: 'Last Day' as any, // Invalid type
+      timeRange: undefined,
       period: 3600
     };
 
     await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.timeRange, mockReq.body.period))
       .rejects
-      .toThrow('Error retrieving CPU usage');
+      .toThrow('Invalid parameter types. timeRange must be a string and period must be a number');
   });
 
   it('should handle error when instance ID is not found', async () => {
-    const errorMessage = 'Instance not found';
+    const errorMessage = 'No instance found for the given IP address';
     const mockGetInstanceId = awsService.getInstanceIdForIPAddress as jest.MockedFunction<typeof awsService.getInstanceIdForIPAddress>;
     
     mockGetInstanceId.mockRejectedValue(new Error(errorMessage));
 
-    await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.periodDays, mockReq.body.period))
+    await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.timeRange, mockReq.body.period))
       .rejects
-      .toThrow('Error retrieving CPU usage');
+      .toThrow(errorMessage);
   });
 
   it('should handle error when getting metrics fails', async () => {
@@ -80,8 +80,8 @@ describe('Metrics Controller', () => {
     mockGetInstanceId.mockResolvedValue(mockInstanceId);
     mockGetMetrics.mockRejectedValue(new Error(errorMessage));
     
-    await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.periodDays, mockReq.body.period))
+    await expect(getCpuUsage(mockReq.body.ipAddress, mockReq.body.timeRange, mockReq.body.period))
       .rejects
-      .toThrow('Error retrieving CPU usage');
+      .toThrow(errorMessage);
   });
 }); 
