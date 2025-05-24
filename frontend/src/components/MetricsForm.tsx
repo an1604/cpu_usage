@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
 
+/**
+ * MetricsQueryParams interface
+ * This interface is used to define the parameters for the metrics query.
+ * @param ipAddress - The IP address of the AWS instance
+ * @param timeRange - The time range of the metrics
+ * @param period - The period of the metrics
+ */
 interface MetricsQueryParams {
   ipAddress: string;
   timeRange: string;
   period: number;
 }
 
+/**
+ * MetricsFormProps interface
+ * This interface is used to define the props for the MetricsForm component.
+ * @param onSubmit - The function to call when the form is submitted
+ * @param isLoading - Whether the form is loading
+ */
 interface MetricsFormProps {
   onSubmit: (params: MetricsQueryParams) => void;
   isLoading: boolean;
@@ -40,6 +53,11 @@ const MetricsForm: React.FC<MetricsFormProps> = ({ onSubmit, isLoading }) => {
     period: 3600
   });
 
+  /**
+   * handleChange function
+   * This function is used to handle the change event of the form.
+   * @param e - The change event
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -48,13 +66,22 @@ const MetricsForm: React.FC<MetricsFormProps> = ({ onSubmit, isLoading }) => {
     }));
   };
 
+  /**
+   * handleSubmit function
+   * This function is used to handle the submit event of the form.
+   * @param e - The submit event
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="metrics-form">
+    <form 
+      className="metrics-form" 
+      onSubmit={handleSubmit}
+      data-testid="metrics-form"
+    >
       <div className="form-group">
         <label htmlFor="ipAddress">IP Address:</label>
         <input
