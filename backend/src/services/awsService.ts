@@ -20,6 +20,7 @@ export class AwsService {
     private cloudWatchClient: CloudWatchClient;
     private ec2Client: EC2Client;
 
+    // map of time ranges to milliseconds
     private readonly TIME_RANGE_MAP: Record<string, number> = {
         'Last Hour': 60 * 60 * 1000,
         'Last 6 Hours': 6 * 60 * 60 * 1000,
@@ -28,7 +29,7 @@ export class AwsService {
         'Last 7 Days': 7 * 24 * 60 * 60 * 1000
     } as const;
 
-    private constructor() {
+    protected constructor() {
         console.log('[AwsService-constructor] Initializing AWS service with region:', config.awsRegion);
         this.cloudWatchClient = new CloudWatchClient(awsConfig);
         this.ec2Client = new EC2Client(awsConfig);
@@ -134,45 +135,13 @@ export class AwsService {
         return { startTime, endTime };
     }
 
-    /**
-     * Gets CPU utilization metrics from CloudWatch
-     * @param instanceId - The ID of the EC2 instance to get metrics for
-     * @param timeRange - The time range string (e.g., "Last Hour", "Last Day", "Last 7 Days")
-     * @param period - The period in seconds for the metrics
-     * @returns The CPU utilization metrics
-     */
-    async getMetricDataFromCloudWatch(
+    // Make methods protected for testing
+    protected createMetricDataParams(
         instanceId: string,
-        timeRange: string,
+        startTime: Date,
+        endTime: Date,
         period: number
-    ): Promise<MetricDataResult> {
-        const { startTime, endTime } = this.convertTimeRangeToDates(timeRange);
-        
-        const actualPeriod = this.determinePeriod(startTime, endTime);
-        if (period < actualPeriod) {
-            console.warn(`[AwsService-getMetricDataFromCloudWatch] Requested period ${period}s is less than minimum ${actualPeriod}s for time range ${timeRange}. Using ${actualPeriod}s instead.`);
-            period = actualPeriod;
-        }
-
-        const timeSpanMs = endTime.getTime() - startTime.getTime();
-        const expectedDataPoints = Math.ceil(timeSpanMs / (period * 1000));
-
-        if (expectedDataPoints > 1440) {
-            const adjustedPeriod = Math.ceil(timeSpanMs / (1440 * 1000));
-            console.warn(`[AwsService-getMetricDataFromCloudWatch] Too many data points (${expectedDataPoints}) for period ${period}s. Adjusting to ${adjustedPeriod}s to limit to 1440 points.`);
-            period = Math.max(adjustedPeriod, actualPeriod);
-        }
-
-        console.log('[AwsService-getMetricDataFromCloudWatch] Fetching CloudWatch metrics:', {
-            instanceId,
-            timeRange,
-            startTime: startTime.toISOString(),
-            endTime: endTime.toISOString(),
-            period,
-            expectedDataPoints: Math.ceil(timeSpanMs / (period * 1000)),
-            timeSpan: `${(timeSpanMs / (1000 * 60 * 60)).toFixed(1)} hours`
-        });
-
+    ) {
         const params = {
             StartTime: startTime,
             EndTime: endTime,
@@ -198,47 +167,116 @@ export class AwsService {
             ],
             ScanBy: ScanBy.TIMESTAMP_ASCENDING
         };
+        console.log('[AwsService-createMetricDataParams] Parameters:', params);
+        return new GetMetricDataCommand(params);
+    }
+
+    protected processResult(
+        timestamps: Date[] | undefined,
+        values: number[] | undefined,
+        period: number,
+        timeRange: string
+    ): MetricDataResult {
+        if (!timestamps || !values) {
+            throw new Error('[AwsService-processResult] Missing Timestamps or Values in metric data');
+        }
+        console.log('[AwsService-processResult] Timestamps:', timestamps);
+        
+        if (timestamps.length === 0 || values.length === 0) {
+            throw new Error('[AwsService-processResult] Empty Timestamps or Values arrays in metric data');
+        }
+
+        // Truncate arrays to the shorter length if they have different lengths
+        const minLength = Math.min(timestamps.length, values.length);
+        if (minLength < timestamps.length || minLength < values.length) {
+            console.warn('[AwsService-processResult] Arrays have different lengths, truncating to shorter length:', minLength);
+            timestamps = timestamps.slice(0, minLength);
+            values = values.slice(0, minLength);
+        }
+
+        console.log('[AwsService-processResult] Timestamps:', timestamps);
+        console.log('[AwsService-processResult] Values:', values);
+        
+        const result: MetricDataResult = {
+            Timestamps: timestamps,
+            Values: values
+        };
+        console.log('[AwsService-processResult] Result:', result);
+        
+        const firstTimestamp = new Date(result.Timestamps[0]);
+        const lastTimestamp = new Date(result.Timestamps[result.Timestamps.length - 1]);
+        console.log('[AwsService-processResult] First timestamp:', firstTimestamp);
+        console.log('[AwsService-processResult] Last timestamp:', lastTimestamp);
+        
+        if (firstTimestamp > lastTimestamp) {
+            console.warn('[AwsService-processResult] Data points are in reverse order, reversing arrays');
+            result.Timestamps.reverse();
+            result.Values.reverse();
+        }
+
+        const timeSpan = lastTimestamp.getTime() - firstTimestamp.getTime();
+        const avgInterval = timeSpan / (result.Timestamps.length - 1);
+        console.log('[AwsService-processResult] Data point distribution:', {
+            totalPoints: result.Timestamps.length,
+            firstTimestamp: result.Timestamps[0],
+            lastTimestamp: result.Timestamps[result.Timestamps.length - 1],
+            avgIntervalSeconds: Math.round(avgInterval / 1000),
+            expectedInterval: period,
+            timeRange,
+            period
+        });
+
+        return result;
+    }
+
+    /**
+     * Gets CPU utilization metrics from CloudWatch
+     * @param instanceId - The ID of the EC2 instance to get metrics for
+     * @param timeRange - The time range string (e.g., "Last Hour", "Last Day", "Last 7 Days")
+     * @param period - The period in seconds for the metrics
+     * @returns The CPU utilization metrics
+     */
+    async getMetricDataFromCloudWatch(
+        instanceId: string,
+        timeRange: string,
+        period: number
+    ): Promise<MetricDataResult> {
+        const { startTime, endTime } = this.convertTimeRangeToDates(timeRange);
+        
+        const actualPeriod = this.determinePeriod(startTime, endTime);
+        if (period < actualPeriod) {
+            console.warn(`[AwsService-getMetricDataFromCloudWatch] Requested period ${period}s is less than minimum ${actualPeriod}s for time range ${timeRange}. Using ${actualPeriod}s instead.`);
+            period = actualPeriod;
+        }
+
+        const timeSpanMs = endTime.getTime() - startTime.getTime();
+
+        console.log('[AwsService-getMetricDataFromCloudWatch] Fetching CloudWatch metrics:', {
+            instanceId,
+            timeRange,
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            period,
+            expectedDataPoints: Math.ceil(timeSpanMs / (period * 1000)),
+            timeSpan: `${(timeSpanMs / (1000 * 60 * 60)).toFixed(1)} hours`
+        });
 
         try {
             console.log('[AwsService-getMetricDataFromCloudWatch] Sending GetMetricData request to CloudWatch');
-            const data = await this.cloudWatchClient.send(
-                new GetMetricDataCommand(params)
-            );
+            const params = this.createMetricDataParams(instanceId, startTime, endTime, period);
+            const data = await this.cloudWatchClient.send(params);
 
             if (!data.MetricDataResults?.[0]) {
                 console.log('[AwsService-getMetricDataFromCloudWatch] No metric data returned from CloudWatch');
-                throw new Error('No metric data returned');
+                throw new Error('[AwsService-getMetricDataFromCloudWatch] No metric data returned');
             }
 
-            const result = {
-                Timestamps: data.MetricDataResults[0].Timestamps || [],
-                Values: data.MetricDataResults[0].Values || []
-            };
-
-            if (result.Timestamps.length > 0) {
-                const firstTimestamp = new Date(result.Timestamps[0]);
-                const lastTimestamp = new Date(result.Timestamps[result.Timestamps.length - 1]);
-                
-                if (firstTimestamp > lastTimestamp) {
-                    console.warn('[AwsService-getMetricDataFromCloudWatch] Data points are in reverse order, reversing arrays');
-                    result.Timestamps.reverse();
-                    result.Values.reverse();
-                }
-
-                const timeSpan = lastTimestamp.getTime() - firstTimestamp.getTime();
-                const avgInterval = timeSpan / (result.Timestamps.length - 1);
-                console.log('[AwsService-getMetricDataFromCloudWatch] Data point distribution:', {
-                    totalPoints: result.Timestamps.length,
-                    firstTimestamp: result.Timestamps[0],
-                    lastTimestamp: result.Timestamps[result.Timestamps.length - 1],
-                    avgIntervalSeconds: Math.round(avgInterval / 1000),
-                    expectedInterval: period,
-                    timeRange,
-                    period
-                });
-            }
-
-            return result;
+            return this.processResult(
+                data.MetricDataResults[0].Timestamps,
+                data.MetricDataResults[0].Values,
+                period,
+                timeRange
+            );
         } catch (error) {
             console.error('[AwsService-getMetricDataFromCloudWatch] Error fetching CloudWatch data:', error);
             throw error;

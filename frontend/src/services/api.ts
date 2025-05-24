@@ -65,11 +65,13 @@ export async function fetchMetricsData(params: MetricsQueryParams): Promise<Metr
             })
         });
         console.log('[API-fetchMetricsData] Response status:', response.status);
+        
         if (!response.ok) {
             const errorText = await response.text();
             console.error('[API-fetchMetricsData] Error response:', errorText);
             throw new Error(errorText || 'Failed to fetch metrics data');
         }
+
         const data = await response.json();
         console.log('[API-fetchMetricsData] Received data:', JSON.stringify(data, null, 2));
 
@@ -81,7 +83,7 @@ export async function fetchMetricsData(params: MetricsQueryParams): Promise<Metr
             throw new Error('Invalid response format: timestamp and value arrays have different lengths');
         }
 
-        // Transform the data to match our expected format with formatted times
+        // transform the data to match our expected format with formatted times
         return {
             Timestamps: data.Timestamps.map(formatTimestampToTime),
             Values: data.Values
